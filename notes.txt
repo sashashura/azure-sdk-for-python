@@ -1,0 +1,44 @@
+We need two things
+
+1. Zero touch restore of recordings
+   - Before tests start, and after we've booted the test proxy, we need to issue the `restore` command.
+   - Can the test-proxy maintain multiple different contexts at the same time?
+  
+2. A simple shell script that will grab all recordings and copy them locally as a pre-stage.
+
+
+3. Proxy Additions
+
+   - Add Update playback/start route that allows a second argument of "assets.json" within the body
+      - This will allow the proxy to take care of restoring and loading the recording to a single step. It will ignore the currently set contextPath to do this.
+
+   - Restore will set context path, and playback starts will assume that leading path.
+
+   - Need to update how we handle recorded vs inmemory vs contextpath.
+
+   - Restore doesn't currently set contextpath at all. So that's good.
+
+Two ways we can approach "context" (well one way doesn't eliminate it)
+
+Option 1. 
+   - Test-proxy will never care about keeping track of what it has restored.
+   - Restore operations immediately set the context of proxy
+   - We can only service a single restored assets.json at a time
+   - This option is how we initially conceptualized the test-proxy to handle assets, but there is something to be said for simplicity and ease of use.
+
+
+Option 2.
+   - Test Proxy will keep track of what it has restored
+   - Restore operations do not change the context path of the proxy
+   - Test runs start with recording file and new inclusion of assets.json path
+      - Restore the target (or no-op if already present and "initialized" at the correct SHA)
+      - Load the recording
+   - We can service any set of recordings at a time
+      - We just need a way to pass context for a recording. Can we do that invisibly?
+
+The idea that the test-proxy will only ever actively care about a single environment at a time.
+
+Outstanding Questions
+
+- How can we set context path? The stuff will clone down to the root of the language repo.
+- Can we entirely do away with the concept of a `contextpath`? Right now everything is relative to root of the repo. That obviously doens't work once we start 

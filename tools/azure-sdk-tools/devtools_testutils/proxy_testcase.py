@@ -6,6 +6,7 @@
 import logging
 import requests
 import six
+import os
 from typing import TYPE_CHECKING
 import urllib.parse as url_parse
 
@@ -35,6 +36,9 @@ PLAYBACK_START_URL = "{}/playback/start".format(PROXY_URL)
 PLAYBACK_STOP_URL = "{}/playback/stop".format(PROXY_URL)
 
 
+def get_recording_assets(test_id: str) -> str:
+    return test_id
+
 def start_record_or_playback(test_id: str) -> "Tuple[str, Dict[str, str]]":
     """Sends a request to begin recording or playing back the provided test.
 
@@ -43,10 +47,15 @@ def start_record_or_playback(test_id: str) -> "Tuple[str, Dict[str, str]]":
     """
     variables = {}  # this stores a dictionary of test variable values that could have been stored with a recording
 
+    json_payload = {"x-recording-file": test_id}
+    if os.getenv("ENABLE_PROXY_RESTORE"):
+        assets_json = get_recording_assets(test_id)
+        json_payload["x-recording-assets-file"] = assets_json
+
     if is_live():
         result = requests.post(
             RECORDING_START_URL,
-            json={"x-recording-file": test_id},
+            json=json_payload,
         )
         if result.status_code != 200:
             message = six.ensure_str(result._content)
@@ -56,7 +65,7 @@ def start_record_or_playback(test_id: str) -> "Tuple[str, Dict[str, str]]":
     else:
         result = requests.post(
             PLAYBACK_START_URL,
-            json={"x-recording-file": test_id},
+            json=json_payload,
         )
         if result.status_code != 200:
             message = six.ensure_str(result._content)
