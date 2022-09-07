@@ -33,13 +33,14 @@ TOOL_ENV_VAR = "PROXY_PID"
 
 import pdb
 
+discovered_roots = []
+
 def get_image_tag(repo_root: str) -> str:
     """Gets the test proxy Docker image tag from the target_version.txt file in /eng/common/testproxy"""
     version_file_location = os.path.relpath("eng/common/testproxy/target_version.txt")
     version_file_location_from_root = os.path.abspath(os.path.join(repo_root, version_file_location))
 
     try:
-        pdb.set_trace()
         with open(version_file_location_from_root, "r") as f:
             image_tag = f.read().strip()
     # In live pipeline tests the root of the repo is in a different location relative to this file
@@ -47,17 +48,13 @@ def get_image_tag(repo_root: str) -> str:
         # REPO_ROOT only gets us to /sdk/{service}/{package}/.tox/whl on Windows
         # REPO_ROOT only gets us to /sdk/{service}/{package}/.tox/whl/lib on Ubuntu
         head, tail = os.path.split(repo_root)
-        while tail != "sdk": # and not os.path.exists(""):
-            print(head)
-            print(tail)
+        while tail != "sdk":
             head, tail = os.path.split(head)
 
-        pdb.set_trace()
         version_file_location_from_root = os.path.abspath(os.path.join(head, version_file_location))
         with open(version_file_location_from_root, "r") as f:
             image_tag = f.read().strip()
 
-    pdb.set_trace()
     return image_tag
 
 
@@ -78,9 +75,12 @@ def ascend_to_root(start_dir_or_file: str) -> str:
         # we need to check for assets.json first!
         # we need the git check to prevent ascending out of the repo
         if os.path.exists(possible_root):
+            if current_dir not in discovered_roots:
+                discovered_roots.append(current_dir)
             return current_dir
         else:
             current_dir = os.path.dirname(current_dir)
+
 
     raise Exception(
         "Requested target \"{}\" does not exist within a git repo.".format(start_dir_or_file)

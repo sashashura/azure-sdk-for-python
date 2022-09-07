@@ -36,21 +36,23 @@ RECORDING_STOP_URL = "{}/record/stop".format(PROXY_URL)
 PLAYBACK_START_URL = "{}/playback/start".format(PROXY_URL)
 PLAYBACK_STOP_URL = "{}/playback/stop".format(PROXY_URL)
 
-def get_recording_assets(test_id: str, repo_root: str) -> str:
-    current_dir = os.path.dirname(test_id)
+from .proxy_startup import discovered_roots
 
-    while current_dir is not None and not (os.path.dirname(current_dir) == current_dir):
-        possible_assets = os.path.join(current_dir, "assets.json")
-        possible_root = os.path.join(current_dir, ".git")
+def get_recording_assets(test_id: str) -> str:
+    for root in discovered_roots:
+        current_dir = os.path.dirname(test_id)
+        while current_dir is not None and not (os.path.dirname(current_dir) == current_dir):
+            possible_assets = os.path.join(current_dir, "assets.json")
+            possible_root = os.path.join(current_dir, ".git")
 
-        # we need to check for assets.json first!
-        if os.path.exists(os.path.join(repo_root, possible_assets)):
-            return possible_assets
-        # we need the git check to prevent ascending out of the repo
-        elif os.path.exists(os.path.join(repo_root, possible_root)):
-            return None
-        else:
-            current_dir = os.path.dirname(current_dir)
+            # we need to check for assets.json first!
+            if os.path.exists(os.path.join(root, possible_assets)):
+                return os.path.abspath(os.path.join(root, possible_assets))
+            # we need the git check to prevent ascending out of the repo
+            elif os.path.exists(os.path.join(root, possible_root)):
+                return None
+            else:
+                current_dir = os.path.dirname(current_dir)
 
     return None
 
@@ -171,7 +173,7 @@ def recorded_by_proxy(test_func: "Callable") -> None:
             return test_func(*args, **trimmed_kwargs)
 
         test_id = get_test_id()
-        recording_id, variables = start_record_or_playback(test_id, requests)
+        recording_id, variables = start_record_or_playback(test_id)
         original_transport_func = RequestsTransport.send
 
         def combined_call(*args, **kwargs):
