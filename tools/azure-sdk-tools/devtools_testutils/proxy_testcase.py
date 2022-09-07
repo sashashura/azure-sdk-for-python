@@ -20,6 +20,7 @@ from azure.core.pipeline.transport import RequestsTransport
 from azure_devtools.scenario_tests.utilities import trim_kwargs_from_test_function
 from .config import PROXY_URL
 from .helpers import get_test_id, is_live, is_live_and_not_recording, set_recording_id
+import pdb
 
 if TYPE_CHECKING:
     from typing import Callable, Dict, Tuple
@@ -37,7 +38,22 @@ PLAYBACK_STOP_URL = "{}/playback/stop".format(PROXY_URL)
 
 
 def get_recording_assets(test_id: str) -> str:
-    return test_id
+    current_dir = os.path.dirname(test_id)
+
+    while current_dir is not None and not (os.path.dirname(current_dir) == current_dir):
+        possible_assets = os.path.join(current_dir, "assets.json")
+        possible_root = os.path.join(current_dir, ".git")
+
+        # we need to check for assets.json first!
+        if os.path.exists(possible_assets):
+            return possible_assets
+        # we need the git check to prevent ascending out of the repo
+        elif os.path.exists(possible_root):
+            return None
+        else:
+            current_dir = os.path.dirname(current_dir)
+
+    return None
 
 def start_record_or_playback(test_id: str) -> "Tuple[str, Dict[str, str]]":
     """Sends a request to begin recording or playing back the provided test.
@@ -48,8 +64,9 @@ def start_record_or_playback(test_id: str) -> "Tuple[str, Dict[str, str]]":
     variables = {}  # this stores a dictionary of test variable values that could have been stored with a recording
 
     json_payload = {"x-recording-file": test_id}
-    if os.getenv("ENABLE_PROXY_RESTORE"):
-        assets_json = get_recording_assets(test_id)
+
+    assets_json = get_recording_assets(test_id)
+    if assets_json:
         json_payload["x-recording-assets-file"] = assets_json
 
     if is_live():
