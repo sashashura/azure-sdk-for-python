@@ -36,8 +36,7 @@ RECORDING_STOP_URL = "{}/record/stop".format(PROXY_URL)
 PLAYBACK_START_URL = "{}/playback/start".format(PROXY_URL)
 PLAYBACK_STOP_URL = "{}/playback/stop".format(PROXY_URL)
 
-
-def get_recording_assets(test_id: str) -> str:
+def get_recording_assets(test_id: str, repo_root: str) -> str:
     current_dir = os.path.dirname(test_id)
 
     while current_dir is not None and not (os.path.dirname(current_dir) == current_dir):
@@ -45,10 +44,10 @@ def get_recording_assets(test_id: str) -> str:
         possible_root = os.path.join(current_dir, ".git")
 
         # we need to check for assets.json first!
-        if os.path.exists(possible_assets):
+        if os.path.exists(os.path.join(repo_root, possible_assets)):
             return possible_assets
         # we need the git check to prevent ascending out of the repo
-        elif os.path.exists(possible_root):
+        elif os.path.exists(os.path.join(repo_root, possible_root)):
             return None
         else:
             current_dir = os.path.dirname(current_dir)
@@ -64,7 +63,6 @@ def start_record_or_playback(test_id: str) -> "Tuple[str, Dict[str, str]]":
     variables = {}  # this stores a dictionary of test variable values that could have been stored with a recording
 
     json_payload = {"x-recording-file": test_id}
-
     assets_json = get_recording_assets(test_id)
     if assets_json:
         json_payload["x-recording-assets-file"] = assets_json
@@ -173,7 +171,7 @@ def recorded_by_proxy(test_func: "Callable") -> None:
             return test_func(*args, **trimmed_kwargs)
 
         test_id = get_test_id()
-        recording_id, variables = start_record_or_playback(test_id)
+        recording_id, variables = start_record_or_playback(test_id, requests)
         original_transport_func = RequestsTransport.send
 
         def combined_call(*args, **kwargs):
