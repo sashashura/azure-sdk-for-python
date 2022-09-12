@@ -31,29 +31,16 @@ PROXY_MANUALLY_STARTED = os.getenv("PROXY_MANUAL_START", False)
 PROXY_CHECK_URL = PROXY_URL.rstrip("/") + "/Info/Available"
 TOOL_ENV_VAR = "PROXY_PID"
 
-import pdb
-
 discovered_roots = []
+
 
 def get_image_tag(repo_root: str) -> str:
     """Gets the test proxy Docker image tag from the target_version.txt file in /eng/common/testproxy"""
     version_file_location = os.path.relpath("eng/common/testproxy/target_version.txt")
     version_file_location_from_root = os.path.abspath(os.path.join(repo_root, version_file_location))
 
-    try:
-        with open(version_file_location_from_root, "r") as f:
-            image_tag = f.read().strip()
-    # In live pipeline tests the root of the repo is in a different location relative to this file
-    except FileNotFoundError:
-        # REPO_ROOT only gets us to /sdk/{service}/{package}/.tox/whl on Windows
-        # REPO_ROOT only gets us to /sdk/{service}/{package}/.tox/whl/lib on Ubuntu
-        head, tail = os.path.split(repo_root)
-        while tail != "sdk":
-            head, tail = os.path.split(head)
-
-        version_file_location_from_root = os.path.abspath(os.path.join(head, version_file_location))
-        with open(version_file_location_from_root, "r") as f:
-            image_tag = f.read().strip()
+    with open(version_file_location_from_root, "r") as f:
+        image_tag = f.read().strip()
 
     return image_tag
 
@@ -81,10 +68,7 @@ def ascend_to_root(start_dir_or_file: str) -> str:
         else:
             current_dir = os.path.dirname(current_dir)
 
-
-    raise Exception(
-        "Requested target \"{}\" does not exist within a git repo.".format(start_dir_or_file)
-    )
+    raise Exception('Requested target "{}" does not exist within a git repo.'.format(start_dir_or_file))
 
 
 def delete_container() -> None:
@@ -149,7 +133,7 @@ def start_test_proxy(request) -> None:
     function will start the test-proxy .NET tool."""
 
     repo_root = ascend_to_root(request.node.items[0].module.__file__)
-    
+
     if not PROXY_MANUALLY_STARTED:
         if os.getenv("TF_BUILD"):
             _LOGGER.info("Starting the test proxy tool...")
