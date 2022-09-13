@@ -80,7 +80,7 @@ steps:
       condition: succeededOrFailed()
 
   - pwsh: |
-      Get-ChildItems -R /Users/runner/work/1/s/.assets/NDeb0xqhz7/sdk/tables/azure-data-tables/tests/recordings/
+      Get-ChildItem -R /Users/runner/work/1/s/.assets/NDeb0xqhz7/sdk/tables/azure-data-tables/tests/recordings/
     displayName: Dump visible tests.
     condition: succeededOrFailed()
 
