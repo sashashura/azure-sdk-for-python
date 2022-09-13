@@ -82,6 +82,7 @@ steps:
   - pwsh: |
       Get-ChildItems -R /Users/runner/work/1/s/.assets/NDeb0xqhz7/sdk/tables/azure-data-tables/tests/recordings/
     displayName: Dump visible tests.
+    condition: succeededOrFailed()
 
   - task: PublishPipelineArtifact@1
     displayName: Publish Tox Logs
