@@ -2,7 +2,7 @@
    "AssetsRepo": "Azure/azure-sdk-assets",
    "AssetsRepoPrefixPath": "",
    "AssetsRepoId": "",
-   "AssetsRepoBranch": "python/tables",
-   "SHA": "6260a536f81a057b8cf9586f1b5c18815b7f94b1"
+   "TagPrefix": "python/tables",
+   "Tag": "python/tables_0f2a2fa5"
  }
  
